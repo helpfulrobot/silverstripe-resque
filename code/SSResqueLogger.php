@@ -3,29 +3,10 @@
 /**
  * SSResqueLogger
  *
+ * Will proxy the error message into SS_Logger
+ *
  */
 class SSResqueLogger extends Psr\Log\AbstractLogger {
-
-	/**
-	 *
-	 * @var boolean
-	 */
-	public $verbose;
-	
-	/**
-	 *
-	 * @var string
-	 */
-	protected $path;
-
-	/**
-	 * 
-	 * @param true $verbose
-	 */
-	public function __construct($verbose = false) {
-		$this->verbose = $verbose;
-		$this->path = DEPLOYNAUT_LOG_PATH.'/resque-log.log';
-	}
 
 	/**
 	 * Logs with an arbitrary level.
@@ -36,16 +17,8 @@ class SSResqueLogger extends Psr\Log\AbstractLogger {
 	 * @return null
 	 */
 	public function log($level, $message, array $context = array()) {
-		$fh = fopen($this->path, 'a');
-		if($this->verbose) {
-			fwrite($fh, '[' . $level . '] [' . strftime('%T %Y-%m-%d') . '] ' . $this->interpolate($message, $context) . PHP_EOL);
-			return;
-		}
-
-		if(!($level === Psr\Log\LogLevel::INFO || $level === Psr\Log\LogLevel::DEBUG)) {
-			fwrite($fh, '[' . $level . '] ' . $this->interpolate($message, $context) . PHP_EOL);
-		}
-		fclose($fh);
+		$message = $this->interpolate($message, $context);
+		SS_Log::log($message, $this->convertLevel($level));
 	}
 
 	/**
@@ -62,16 +35,17 @@ class SSResqueLogger extends Psr\Log\AbstractLogger {
 		foreach($context as $key => $val) {
 			$replace['{' . $key . '}'] = $val;
 		}
-
 		// interpolate replacement values into the message and return
 		return strtr($message, $replace);
 	}
 	
 	/**
-	 * 
+	 *
 	 * @param string $resqueError
+	 *
+	 * @return int
 	 */
-	protected function convertErrorLevel($resqueError) {
+	protected function convertLevel($resqueError) {
 		switch($resqueError) {
 			case 'emergency':
 			case 'alert':

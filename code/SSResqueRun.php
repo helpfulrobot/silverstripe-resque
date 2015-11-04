@@ -8,12 +8,11 @@
  * 
  * list of GET params:
  *  
- *  verbose: 1 | 0 -  Should we log all messages to the log
+ *  log: 0 | 1 -  Log all message to SS_Log::log
  *  queue: "queuename" - A comma separated list of queues to work on
  *  backend: "localhost:6379" - the address and port number of the redis server
  *  count: int - the number of child workers to spin up
- *  log: bool - use the silverstripe logger instead of STDOUT
- * 
+ *  log
  */
 class SSResqueRun extends Controller {
 
@@ -94,15 +93,7 @@ class SSResqueRun extends Controller {
 		}
 		
 		if($this->request->getVar('log')) {
-			if($this->request->getVar('verbose')) {
-				$this->logger = new SSResqueLogger(true);
-			} else {
-				$this->logger = new SSResqueLogger(false);
-			}
-		} else if($this->request->getVar('verbose')) {
-			$this->logger = new Resque_Log(true);
-		} else {
-			$this->logger = new Resque_Log(false);
+			$this->logger = new SSResqueLogger();
 		}
 	}
 
